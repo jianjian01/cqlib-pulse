@@ -1,4 +1,22 @@
+<!--
+This code is part of cqlib.
+
+Copyright (C) 2026 China Telecom Quantum Group.
+
+This code is licensed under the Apache License, Version 2.0. You may
+obtain a copy of this license in the LICENSE file in the root directory
+of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+
+Any modifications or derivative works of this code must retain this
+copyright notice, and modified files need to carry a notice indicating
+that they have been altered from the originals.
+-->
+
 # cqlib-pulse
+
+中文 README | [English README](README_EN.md)
+
+[中文教程](docs/tutorial_zh_CN.md) | [English Tutorial](docs/tutorial_en.md)
 
 `cqlib-pulse` 是一个支持 Python 3.10+、面向 CQLib 生态的独立脉冲线路扩展包，提供：
 
@@ -10,12 +28,14 @@
 普通量子比特直接复用 `cqlib.Qubit`；波形、耦合通道和脉冲指令由本包提供。
 
 ## 与 cqlib 的关系
-本包采用：
+
+类型关系如下：
+
 ```text
-cqlib.Qubit                  官方基础目标类型
+cqlib.Qubit                  基础目标类型
 cqlib_pulse.CouplerQubit     脉冲专用耦合通道
 cqlib_pulse.PulseInstruction 脉冲指令类型
-cqlib_pulse.PulseCircuit     自有脉冲操作序列
+cqlib_pulse.PulseCircuit     脉冲操作序列
 ```
 
 ## 源码架构
@@ -65,10 +85,8 @@ python -m pip install 'cqlib-pulse[tianyan]'
 ## 构建线路并转 QCIS
 
 ```python
-from cqlib_pulse import (
-    CosineWaveform, CouplerQubit, PulseCircuit,
-)
 from cqlib import Qubit
+from cqlib_pulse import CosineWaveform, CouplerQubit, PulseCircuit
 
 circuit = PulseCircuit()
 circuit.pxy(
@@ -168,3 +186,14 @@ print(url)
 `data.visibleUrl`。API Key 用于登录换取 access token，token 只保存在
 内存并以天衍兼容的 `basicToken`、`Authorization: Bearer` 请求头发送；
 如果接口返回 401，客户端只自动刷新重试一次。
+
+## 参与贡献
+
+贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)，社区行为规范见
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
+
+各版本变更记录见 [releasenotes](releasenotes/README.md)。
+
+## 许可证
+
+本项目采用 [Apache License 2.0](LICENSE)。

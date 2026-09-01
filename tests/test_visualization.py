@@ -1,3 +1,15 @@
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 import json
 from urllib.error import HTTPError
 from urllib.parse import parse_qs
@@ -10,8 +22,7 @@ from cqlib_pulse import (
     TianyanWaveformClient,
     WaveformJob,
 )
-from cqlib_pulse.cloud import visualization
-from cqlib_pulse.cloud import auth
+from cqlib_pulse.cloud import auth, visualization
 
 
 class FakeWaveformAPI:
@@ -84,9 +95,7 @@ def test_tianyan_http_client_uses_public_url_and_protocol_fields(monkeypatch):
     responses = iter(
         [
             FakeHTTPResponse({"data": {"id": 2091024341700579328}}),
-            FakeHTTPResponse(
-                {"data": {"visibleUrl": "https://object.example/waveform.pkl"}}
-            ),
+            FakeHTTPResponse({"data": {"visibleUrl": "https://object.example/waveform.pkl"}}),
         ]
     )
 
@@ -122,8 +131,7 @@ def test_tianyan_http_client_uses_public_url_and_protocol_fields(monkeypatch):
 
     query_request, _ = requests[1]
     assert query_request.full_url == (
-        "https://qc.zdxlz.com/qccp-quantum/sdk/getWaveformDiagram"
-        "?id=2091024341700579328"
+        "https://qc.zdxlz.com/qccp-quantum/sdk/getWaveformDiagram?id=2091024341700579328"
     )
     assert query_request.method == "GET"
     assert url == "https://object.example/waveform.pkl"
@@ -137,9 +145,7 @@ def test_client_from_api_key_refreshes_once_after_401(monkeypatch):
     def fake_login_urlopen(request, timeout):
         nonlocal login_count
         login_count += 1
-        return FakeHTTPResponse(
-            {"code": 0, "data": {"access_token": next(access_tokens)}}
-        )
+        return FakeHTTPResponse({"code": 0, "data": {"access_token": next(access_tokens)}})
 
     def fake_waveform_urlopen(request, timeout):
         waveform_tokens.append(request.get_header("Token"))

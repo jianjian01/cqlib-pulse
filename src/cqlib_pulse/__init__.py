@@ -1,8 +1,30 @@
-# (C) Copyright China Telecom Quantum Group 2026
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """Standalone Python pulse module for CQLib."""
 
+from .cloud import (
+    CloudPulseVisualizer,
+    PulseExecution,
+    TianyanAuthClient,
+    TianyanExecutor,
+    TianyanWaveformClient,
+    WaveformAPI,
+    WaveformJob,
+)
 from .core import (
+    PXY,
+    PZ,
+    PZ0,
     CosineWaveform,
     CouplerQubit,
     FlattopWaveform,
@@ -13,9 +35,6 @@ from .core import (
     PulseInstruction,
     PulseOperation,
     PulseTarget,
-    PXY,
-    PZ,
-    PZ0,
     Qubit,
     ScheduledOperation,
     SlepianWaveform,
@@ -33,17 +52,8 @@ from .errors import (
 )
 from .qcis import dumps as qcis_dumps
 from .qcis import loads as qcis_loads
-from .cloud import (
-    CloudPulseVisualizer,
-    PulseExecution,
-    TianyanAuthClient,
-    TianyanExecutor,
-    TianyanWaveformClient,
-    WaveformAPI,
-    WaveformJob,
-)
 
-__version__ = "0.3.0"
+__version__ = "0.1.0b1"
 
 __all__ = [
     "CloudPulseVisualizer",

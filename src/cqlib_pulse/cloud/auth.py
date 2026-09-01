@@ -1,4 +1,14 @@
-# (C) Copyright China Telecom Quantum Group 2026
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """Tianyan API-key authentication without credential persistence."""
 
@@ -11,7 +21,6 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from ..errors import TianyanAuthenticationError
-
 
 DEFAULT_TIANYAN_URL = "https://qc.zdxlz.com"
 LOGIN_PATH = "/qccp-auth/oauth2/sdk/opnId"
@@ -30,9 +39,7 @@ class TianyanAuthClient:
     ) -> None:
         if not isinstance(api_key, str) or not api_key.strip():
             raise ValueError("api_key must be a non-empty string")
-        if not isinstance(base_url, str) or not base_url.startswith(
-            ("http://", "https://")
-        ):
+        if not isinstance(base_url, str) or not base_url.startswith(("http://", "https://")):
             raise ValueError("base_url must start with http:// or https://")
         if request_timeout_secs <= 0:
             raise ValueError("request_timeout_secs must be positive")
@@ -70,9 +77,7 @@ class TianyanAuthClient:
         if not token and isinstance(data, dict):
             token = data.get("access_token")
         if not isinstance(token, str) or not token:
-            raise TianyanAuthenticationError(
-                "Tianyan login response is missing data.access_token"
-            )
+            raise TianyanAuthenticationError("Tianyan login response is missing data.access_token")
         return token
 
     def _send(self, request: Request) -> dict[str, Any]:
@@ -88,11 +93,7 @@ class TianyanAuthClient:
                 f"Unable to reach Tianyan login API: {exc.reason}"
             ) from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise TianyanAuthenticationError(
-                "Tianyan login API returned invalid JSON"
-            ) from exc
+            raise TianyanAuthenticationError("Tianyan login API returned invalid JSON") from exc
         if not isinstance(result, dict):
-            raise TianyanAuthenticationError(
-                "Tianyan login response must be a JSON object"
-            )
+            raise TianyanAuthenticationError("Tianyan login response must be a JSON object")
         return result

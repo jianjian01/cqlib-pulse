@@ -1,4 +1,14 @@
-# (C) Copyright China Telecom Quantum Group 2026
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """Parse QCIS text into pulse and standard operations."""
 
@@ -6,7 +16,7 @@ from __future__ import annotations
 
 import re
 
-from ..core.instructions import G, PXY, PZ, PZ0, PulseInstruction
+from ..core.instructions import PXY, PZ, PZ0, G, PulseInstruction
 from ..core.operations import Operation, PulseOperation, StandardOperation
 from ..core.targets import parse_target
 from ..core.waveforms import Number, waveform_from_parameters

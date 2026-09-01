@@ -1,4 +1,14 @@
-# (C) Copyright China Telecom Quantum Group 2026
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """Waveform value objects for the Tianyan QCIS pulse extension."""
 
@@ -62,9 +72,7 @@ class Waveform:
         if isinstance(self.length, bool) or not isinstance(self.length, int):
             raise PulseValidationError("length must be an integer")
         if not 0 <= self.length <= MAX_PULSE_LENGTH_NS:
-            raise PulseValidationError(
-                f"length must be in [0, {MAX_PULSE_LENGTH_NS}] nanoseconds"
-            )
+            raise PulseValidationError(f"length must be in [0, {MAX_PULSE_LENGTH_NS}] nanoseconds")
         # Physical amplitude ranges depend on the cloud-side mapper.
         validate_real("amplitude", self.amplitude)
 
@@ -199,9 +207,7 @@ def waveform_from_parameters(parameters: Sequence[Number]) -> Waveform:
         if waveform_type is WaveformType.SLEPIAN:
             if len(rest) != 4:
                 raise QCISParseError("Slepian waveform requires thf, thi, lam2 and lam3")
-            return SlepianWaveform(
-                thf=rest[0], thi=rest[1], lam2=rest[2], lam3=rest[3], **common
-            )  # type: ignore[arg-type]
+            return SlepianWaveform(thf=rest[0], thi=rest[1], lam2=rest[2], lam3=rest[3], **common)  # type: ignore[arg-type]
         return NumericWaveform(data_list=tuple(rest), **common)  # type: ignore[arg-type]
     except PulseValidationError as exc:
         raise QCISParseError(str(exc)) from exc
@@ -209,7 +215,9 @@ def waveform_from_parameters(parameters: Sequence[Number]) -> Waveform:
 
 def _parse_number(value: str) -> Number:
     parsed = float(value)
-    return int(parsed) if parsed.is_integer() and not any(c in value.lower() for c in ".e") else parsed
+    return (
+        int(parsed) if parsed.is_integer() and not any(c in value.lower() for c in ".e") else parsed
+    )
 
 
 def _format_number(value: Number) -> str:

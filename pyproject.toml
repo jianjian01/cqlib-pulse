@@ -1,10 +1,22 @@
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cqlib-pulse"
-version = "0.3.0"
+version = "0.1.0b1"
 description = "Pulse-level circuit construction and Tianyan cloud integration for CQLib"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +26,7 @@ authors = [
 ]
 keywords = ["cqlib", "quantum computing", "pulse", "QCIS", "Tianyan"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
@@ -35,6 +47,7 @@ dependencies = [
 tianyan = ["cqlib-tianyan>=0.1.0,<1"]
 test = ["pytest>=8"]
 build = ["build>=1.2", "twine>=5"]
+dev = ["pre-commit>=4,<5", "pytest>=8"]
 
 [project.urls]
 Repository = "https://github.com/cq-lib/cqlib-pulse"
@@ -49,3 +62,10 @@ cqlib_pulse = ["py.typed"]
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
