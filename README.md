@@ -1,0 +1,170 @@
+# cqlib-pulse
+
+`cqlib-pulse` 是一个支持 Python 3.10+、面向 CQLib 生态的独立脉冲线路扩展包，提供：
+
+- QCIS 脉冲目标、波形和指令数据结构；
+- `PulseCircuit` 混合线路构建、QCIS 序列化/反序列化和通道时间线；
+- 通过可选依赖 `cqlib-tianyan` 提交任务并取得执行结果；
+- 调用云平台的创建、查询接口取得脉冲可视化 URL。
+
+普通量子比特直接复用 `cqlib.Qubit`；波形、耦合通道和脉冲指令由本包提供。
+
+## 与 cqlib 的关系
+本包采用：
+```text
+cqlib.Qubit                  官方基础目标类型
+cqlib_pulse.CouplerQubit     脉冲专用耦合通道
+cqlib_pulse.PulseInstruction 脉冲指令类型
+cqlib_pulse.PulseCircuit     自有脉冲操作序列
+```
+
+## 源码架构
+
+源码按职责分为三层，使用者通常只需要从顶层 `cqlib_pulse` 导入：
+
+```text
+src/cqlib_pulse/
+├── __init__.py          对外统一导出稳定 API
+├── errors.py            公共异常
+├── py.typed             PEP 561 类型标记
+├── core/                Python 脉冲领域模型
+│   ├── targets.py       Qubit/CouplerQubit 目标
+│   ├── waveforms.py     四种波形
+│   ├── instructions.py  PXY/PZ/PZ0/G 指令
+│   ├── operations.py    指令与目标的绑定
+│   └── circuit.py       线路构建和时间调度
+├── qcis/                QCIS 协议适配层
+│   ├── parser.py        QCIS -> Python 对象
+│   └── serializer.py    Python 对象 -> QCIS
+└── cloud/               外部云平台适配层
+    ├── auth.py          API Key 登录与 token 刷新
+    ├── executor.py      cqlib-tianyan 任务提交
+    └── visualization.py 云端波形创建和查询
+```
+
+`qcis` 和 `cloud` 都建立在 `core` 数据结构之上；`PulseCircuit` 仅在执行
+转换方法时延迟调用 QCIS 适配层。云平台代码不会进入波形、指令等基础
+数据结构，QCIS 文本处理也不负责网络请求。
+
+## 安装和构建
+
+```bash
+python -m pip install -e .
+python -m pip install build
+python -m build
+```
+
+使用天衍云功能时安装可选依赖：
+
+```bash
+python -m pip install 'cqlib-pulse[tianyan]'
+```
+
+基础安装会自动安装 `cqlib`；`cqlib-tianyan` 仅在需要云端提交和可视化时安装。
+
+## 构建线路并转 QCIS
+
+```python
+from cqlib_pulse import (
+    CosineWaveform, CouplerQubit, PulseCircuit,
+)
+from cqlib import Qubit
+
+circuit = PulseCircuit()
+circuit.pxy(
+    Qubit(1),
+    CosineWaveform(length=40, amplitude=0.2),
+    frequency=5e9,
+    phase=0.0,
+    drag_alpha=1.0,
+)
+circuit.pz(
+    CouplerQubit(107),
+    CosineWaveform(length=20, amplitude=-0.1),
+    call_mapper=True,
+)
+circuit.g(107, length=100, coupling_strength=-3_000_000)
+circuit.delay(Qubit(1), length=20)
+circuit.measure(Qubit(1))
+
+qcis = circuit.to_qcis()
+print(qcis)
+```
+
+输出：
+
+```text
+PXY Q1 0 40 0.2 5000000000 0 1
+PZ G107 0 20 -0.1 1
+G G107 100 -3000000
+I Q1 20
+M Q1
+```
+
+反向解析使用：
+
+```python
+restored = PulseCircuit.from_qcis(qcis)
+# 兼容旧入口：PulseCircuit.load(qcis)
+```
+
+云平台脉冲协议的四种波形编号是：数值型 `-1`、余弦型 `0`、
+平顶型 `1`、Slepian 型 `2`。`PXY` 的频率、相位和 DRAG 参数属于
+指令；`PZ/PZ0` 的 `call_mapper` 也属于指令，而不是波形。
+
+线路也可以保留普通 QCIS 指令：
+
+```python
+circuit.rz(1, 1.57).x2p(1).barrier(Qubit(1), Qubit(2))
+print(circuit.schedule())       # 每条操作的 start_ns / end_ns
+print(circuit.channel_times)    # 每个通道的最终时刻
+```
+
+`PXY/PZ/G/I` 推进对应通道时间，`PZ0` 不推进时间，`B` 对齐所列通道。
+机器标定值、映射关系和数值波形的硬件约束仍由云平台校验，本地只进行
+与公开协议一致的结构和基础数值检查。
+
+## 提交任务并取得结果
+
+```python
+from cqlib_pulse import TianyanExecutor
+
+executor = TianyanExecutor.login(api_key="...", machine_name="...")
+execution = executor.run(circuit, shots=1000)
+
+print(execution.task)     # cqlib-tianyan 的任务句柄
+print(execution.results)  # task.wait(...) 返回的执行结果
+```
+
+也可以复用已经登录的 backend：
+
+```python
+executor = TianyanExecutor(backend)
+```
+
+## 云端脉冲可视化
+
+可视化对象只依赖云平台的两个操作：
+
+```python
+create_waveform_data(circuit, circuit_name=None, is_verify=True) -> query_id
+query_waveform_data(query_id) -> url | None
+```
+
+```python
+from cqlib_pulse import CloudPulseVisualizer, TianyanWaveformClient
+
+client = TianyanWaveformClient.from_api_key(
+    api_key="...",
+    qc_code="tianyan176",
+)
+visualizer = CloudPulseVisualizer(client)
+url = visualizer.visualize(circuit, circuit_name="demo")
+print(url)
+```
+
+默认客户端地址为 `https://qc.zdxlz.com`。创建接口发送 `circuit`、
+`qcCode`、`circuitName`、`isVerify`，查询接口根据任务 ID 返回响应中的
+`data.visibleUrl`。API Key 用于登录换取 access token，token 只保存在
+内存并以天衍兼容的 `basicToken`、`Authorization: Bearer` 请求头发送；
+如果接口返回 401，客户端只自动刷新重试一次。
