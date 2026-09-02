@@ -1,3 +1,15 @@
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 import pytest
 from cqlib import Qubit as CqlibQubit
 
@@ -28,11 +40,7 @@ def test_build_and_round_trip_protocol_qcis():
     )
     circuit.g(107, 100, -3_000_000.5)
 
-    expected = (
-        "PXY Q0 0 40 0.2 5000000000 0.1 -0.2\n"
-        "PZ G107 0 20 -0.1 1\n"
-        "G G107 100 -3000000.5"
-    )
+    expected = "PXY Q0 0 40 0.2 5000000000 0.1 -0.2\nPZ G107 0 20 -0.1 1\nG G107 100 -3000000.5"
     assert circuit.to_qcis() == expected
     assert PulseCircuit.load(expected).to_qcis() == expected
     assert circuit.qubits == (Qubit(0),)
@@ -40,14 +48,7 @@ def test_build_and_round_trip_protocol_qcis():
 
 
 def test_mixed_standard_and_pulse_qcis_round_trip():
-    qcis = (
-        "X2P Q0\n"
-        "RZ Q0 1.25\n"
-        "I Q0 20\n"
-        "PZ0 Q0 0 10 0.2 0\n"
-        "B Q0 Q1\n"
-        "M Q0"
-    )
+    qcis = "X2P Q0\nRZ Q0 1.25\nI Q0 20\nPZ0 Q0 0 10 0.2 0\nB Q0 Q1\nM Q0"
     circuit = PulseCircuit.from_qcis(qcis)
     assert circuit.to_qcis() == qcis
     assert isinstance(circuit[0], StandardOperation)

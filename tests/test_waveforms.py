@@ -1,3 +1,15 @@
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 import pytest
 
 from cqlib_pulse import (
@@ -49,9 +61,7 @@ def test_numeric_waveform_protocol_identifier_is_minus_one():
     [
         lambda: CosineWaveform(length=-1, amplitude=0.2),
         lambda: CosineWaveform(length=49_985, amplitude=0.2),
-        lambda: SlepianWaveform(
-            length=10, amplitude=0.2, thf=1.1, thi=0, lam2=0, lam3=0
-        ),
+        lambda: SlepianWaveform(length=10, amplitude=0.2, thf=1.1, thi=0, lam2=0, lam3=0),
     ],
 )
 def test_waveform_validation(waveform):

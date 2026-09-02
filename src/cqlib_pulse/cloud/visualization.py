@@ -1,21 +1,30 @@
-# (C) Copyright China Telecom Quantum Group 2026
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """Cloud pulse-waveform visualization workflow."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import time
+from dataclasses import dataclass
 from typing import Any, Callable, Protocol, runtime_checkable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from .auth import DEFAULT_TIANYAN_URL, TianyanAuthClient
 from ..core.circuit import PulseCircuit
 from ..errors import WaveformAPIError
-
+from .auth import DEFAULT_TIANYAN_URL, TianyanAuthClient
 
 CREATE_WAVEFORM_PATH = "/qccp-quantum/sdk/generateWaveformDiagram"
 QUERY_WAVEFORM_PATH = "/qccp-quantum/sdk/getWaveformDiagram"
@@ -66,9 +75,7 @@ class TianyanWaveformClient:
             raise ValueError("token must be a non-empty string")
         if not isinstance(qc_code, str) or not qc_code.strip():
             raise ValueError("qc_code must be a non-empty string")
-        if not isinstance(base_url, str) or not base_url.startswith(
-            ("http://", "https://")
-        ):
+        if not isinstance(base_url, str) or not base_url.startswith(("http://", "https://")):
             raise ValueError("base_url must start with http:// or https://")
         if request_timeout_secs <= 0:
             raise ValueError("request_timeout_secs must be positive")
@@ -134,9 +141,7 @@ class TianyanWaveformClient:
         if url in (None, ""):
             return None
         if not isinstance(url, str):
-            raise WaveformAPIError(
-                "Waveform query response data.visibleUrl must be a string"
-            )
+            raise WaveformAPIError("Waveform query response data.visibleUrl must be a string")
         return url
 
     def _request_json(
@@ -178,9 +183,7 @@ class TianyanWaveformClient:
                     f"Waveform API returned HTTP {exc.code}: {exc.reason}"
                 ) from exc
             except URLError as exc:
-                raise WaveformAPIError(
-                    f"Unable to reach waveform API: {exc.reason}"
-                ) from exc
+                raise WaveformAPIError(f"Unable to reach waveform API: {exc.reason}") from exc
             except (UnicodeDecodeError, json.JSONDecodeError) as exc:
                 raise WaveformAPIError("Waveform API returned invalid JSON") from exc
 

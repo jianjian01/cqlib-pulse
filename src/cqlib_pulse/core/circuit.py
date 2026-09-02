@@ -1,4 +1,14 @@
-# (C) Copyright China Telecom Quantum Group 2026
+# This code is part of cqlib.
+#
+# Copyright (C) 2026 China Telecom Quantum Group.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """Mixed pulse/standard circuit construction and scheduling."""
 
@@ -7,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 
 from ..errors import PulseValidationError
-from .instructions import G, PXY, PZ, PZ0, PulseInstruction
+from .instructions import PXY, PZ, PZ0, G, PulseInstruction
 from .operations import Operation, PulseOperation, ScheduledOperation, StandardOperation
 from .targets import CouplerQubit, PulseTarget, Qubit
 from .waveforms import MAX_PULSE_LENGTH_NS, Number, Waveform
@@ -40,7 +50,7 @@ class PulseCircuit(Sequence[Operation]):
     """An ordered circuit supporting both pulse and ordinary QCIS operations.
 
     The extension owns its Python operation sequence and reuses ``cqlib.Qubit``.
-    It intentionally does not inherit the non-subclassable PyO3 ``cqlib.Circuit``.
+    The non-subclassable PyO3 ``cqlib.Circuit`` is used through composition.
     """
 
     def __init__(
@@ -200,7 +210,9 @@ class PulseCircuit(Sequence[Operation]):
 
     @property
     def channel_times(self) -> dict[PulseTarget, int]:
-        clocks: dict[PulseTarget, int] = {target: 0 for target in (*self.qubits, *self.coupler_qubits)}
+        clocks: dict[PulseTarget, int] = {
+            target: 0 for target in (*self.qubits, *self.coupler_qubits)
+        }
         for scheduled in self.schedule():
             operation = scheduled.operation
             if isinstance(operation, PulseOperation) and not operation.instruction.advances_time:
