@@ -42,10 +42,6 @@ def _targets(
     return result
 
 
-def _qubit(value: int | Qubit) -> Qubit:
-    return Qubit(value) if isinstance(value, int) else value
-
-
 class PulseCircuit(Sequence[Operation]):
     """An ordered circuit supporting both pulse and ordinary QCIS operations.
 
@@ -79,8 +75,13 @@ class PulseCircuit(Sequence[Operation]):
     def coupler_qubits(self) -> tuple[CouplerQubit, ...]:
         return tuple(sorted(self._couplers, key=lambda target: target.index))  # type: ignore[return-value]
 
-    def append(self, instruction: PulseInstruction, target: PulseTarget) -> "PulseCircuit":
-        return self.append_operation(PulseOperation(instruction, target))
+    def append(
+        self,
+        instruction: PulseInstruction,
+        target: int | PulseTarget,
+    ) -> "PulseCircuit":
+        resolved_target = Qubit(target) if isinstance(target, int) else target
+        return self.append_operation(PulseOperation(instruction, resolved_target))
 
     append_pulse = append
 
@@ -98,10 +99,17 @@ class PulseCircuit(Sequence[Operation]):
     def append_standard(
         self,
         opcode: str,
-        targets: Iterable[PulseTarget],
+        targets: int | PulseTarget | Iterable[int | PulseTarget],
         parameters: Iterable[Number] = (),
     ) -> "PulseCircuit":
-        return self.append_operation(StandardOperation(opcode, tuple(targets), tuple(parameters)))
+        if isinstance(targets, (int, Qubit, CouplerQubit)):
+            targets = (targets,)
+        resolved_targets = tuple(
+            Qubit(target) if isinstance(target, int) else target for target in targets
+        )
+        return self.append_operation(
+            StandardOperation(opcode, resolved_targets, tuple(parameters))
+        )
 
     def pxy(
         self,
@@ -112,7 +120,7 @@ class PulseCircuit(Sequence[Operation]):
         phase: float = 0.0,
         drag_alpha: float = 0.0,
     ) -> "PulseCircuit":
-        return self.append(PXY(waveform, frequency, phase, drag_alpha), _qubit(qubit))
+        return self.append(PXY(waveform, frequency, phase, drag_alpha), qubit)
 
     def pz(
         self,
@@ -121,8 +129,7 @@ class PulseCircuit(Sequence[Operation]):
         *,
         call_mapper: bool | int = False,
     ) -> "PulseCircuit":
-        resolved = Qubit(target) if isinstance(target, int) else target
-        return self.append(PZ(waveform, call_mapper), resolved)
+        return self.append(PZ(waveform, call_mapper), target)
 
     def pz0(
         self,
@@ -131,8 +138,7 @@ class PulseCircuit(Sequence[Operation]):
         *,
         call_mapper: bool | int = False,
     ) -> "PulseCircuit":
-        resolved = Qubit(target) if isinstance(target, int) else target
-        return self.append(PZ0(waveform, call_mapper), resolved)
+        return self.append(PZ0(waveform, call_mapper), target)
 
     def g(
         self,
@@ -144,25 +150,51 @@ class PulseCircuit(Sequence[Operation]):
         return self.append(G(length, coupling_strength), target)
 
     def delay(self, target: int | PulseTarget, length: int) -> "PulseCircuit":
-        if isinstance(length, bool) or not isinstance(length, int):
-            raise PulseValidationError("delay length must be an integer")
-        if not 0 <= length <= MAX_PULSE_LENGTH_NS:
-            raise PulseValidationError(f"delay length must be in [0, {MAX_PULSE_LENGTH_NS}]")
-        resolved = Qubit(target) if isinstance(target, int) else target
-        return self.append_standard("I", (resolved,), (length,))
+        return self.i(target, length)
 
     def rz(self, qubit: int | Qubit, angle: float) -> "PulseCircuit":
-        return self.append_standard("RZ", (_qubit(qubit),), (angle,))
+        return self.append_standard("RZ", qubit, (angle,))
 
     def x2p(self, qubit: int | Qubit) -> "PulseCircuit":
-        return self.append_standard("X2P", (_qubit(qubit),))
+        return self.append_standard("X2P", qubit)
+
+    def x2m(self, qubit: int | Qubit) -> "PulseCircuit":
+        return self.append_standard("X2M", qubit)
+
+    def y2p(self, qubit: int | Qubit) -> "PulseCircuit":
+        return self.append_standard("Y2P", qubit)
+
+    def y2m(self, qubit: int | Qubit) -> "PulseCircuit":
+        return self.append_standard("Y2M", qubit)
+
+    def xy2p(self, qubit: int | Qubit, angle: float) -> "PulseCircuit":
+        return self.append_standard("XY2P", qubit, (angle,))
+
+    def xy2m(self, qubit: int | Qubit, angle: float) -> "PulseCircuit":
+        return self.append_standard("XY2M", qubit, (angle,))
+
+    def cx(
+        self,
+        control: int | Qubit,
+        target: int | Qubit,
+    ) -> "PulseCircuit":
+        return self.append_standard("CX", (control, target))
+
+    def i(self, target: int | PulseTarget, length: int) -> "PulseCircuit":
+        """Append a QCIS ``I`` delay instruction."""
+
+        return self.append_standard("I", target, (length,))
+
+    def b(self, *targets: int | PulseTarget) -> "PulseCircuit":
+        """Append a QCIS ``B`` barrier instruction."""
+
+        return self.append_standard("B", targets)
 
     def measure(self, qubit: int | Qubit) -> "PulseCircuit":
-        return self.append_standard("M", (_qubit(qubit),))
+        return self.append_standard("M", qubit)
 
     def barrier(self, *targets: int | PulseTarget) -> "PulseCircuit":
-        resolved = tuple(Qubit(value) if isinstance(value, int) else value for value in targets)
-        return self.append_standard("B", resolved)
+        return self.b(*targets)
 
     def to_qcis(self) -> str:
         from ..qcis import dumps

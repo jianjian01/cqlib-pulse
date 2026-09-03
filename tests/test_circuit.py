@@ -54,6 +54,52 @@ def test_mixed_standard_and_pulse_qcis_round_trip():
     assert isinstance(circuit[0], StandardOperation)
 
 
+def test_all_supported_standard_qcis_builders_and_round_trip():
+    circuit = (
+        PulseCircuit()
+        .x2p(0)
+        .x2m(0)
+        .y2p(0)
+        .y2m(0)
+        .xy2p(0, 0.25)
+        .xy2m(0, -0.5)
+        .rz(0, 1.25)
+        .cx(0, 1)
+        .i(0, 20)
+        .b(Qubit(0), Qubit(1), CouplerQubit(107))
+    )
+
+    expected = (
+        "X2P Q0\n"
+        "X2M Q0\n"
+        "Y2P Q0\n"
+        "Y2M Q0\n"
+        "XY2P Q0 0.25\n"
+        "XY2M Q0 -0.5\n"
+        "RZ Q0 1.25\n"
+        "CX Q0 Q1\n"
+        "I Q0 20\n"
+        "B Q0 Q1 G107"
+    )
+    assert circuit.to_qcis() == expected
+    assert PulseCircuit.from_qcis(expected).to_qcis() == expected
+
+
+def test_delay_and_barrier_compatibility_names_match_qcis_names():
+    legacy = PulseCircuit().delay(0, 12).barrier(0, 1)
+    qcis_named = PulseCircuit().i(0, 12).b(0, 1)
+
+    assert legacy.to_qcis() == qcis_named.to_qcis() == "I Q0 12\nB Q0 Q1"
+
+
+def test_append_standard_resolves_integer_targets():
+    circuit = PulseCircuit().append_standard("X2P", 0)
+    circuit.append_standard("CX", (0, Qubit(1)))
+
+    assert circuit.to_qcis() == "X2P Q0\nCX Q0 Q1"
+    assert circuit.qubits == (Qubit(0), Qubit(1))
+
+
 def test_pz0_does_not_advance_channel_time_but_delay_does():
     circuit = PulseCircuit()
     circuit.pz0(0, CosineWaveform(length=30, amplitude=0.2))
@@ -95,6 +141,17 @@ def test_target_rules_are_enforced():
         "PZ Q0 99 10 0.2 0",
         "PXY Q0 0 10 0.2",
         "I Q0 10 extra",
+        "X2P Q0 0.5",
+        "X2M Q0 Q1",
+        "Y2P G0",
+        "Y2M Q0 0.5",
+        "XY2P Q0",
+        "XY2M Q0 0.1 0.2",
+        "RZ Q0",
+        "CX Q0",
+        "CX Q0 Q0",
+        "CX Q0 G1",
+        "B Q0 1",
     ],
 )
 def test_invalid_qcis_reports_line(qcis):

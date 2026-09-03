@@ -134,10 +134,16 @@ parameters of `PXY`; `call_mapper` is an instruction parameter of `PZ/PZ0`.
 Circuits can also contain standard QCIS instructions:
 
 ```python
-circuit.rz(1, 1.57).x2p(1).barrier(Qubit(1), Qubit(2))
+circuit.x2p(1).x2m(1).y2p(1).y2m(1)
+circuit.xy2p(1, 0.25).xy2m(1, -0.25).rz(1, 1.57)
+circuit.cx(1, 2).i(1, 20).b(Qubit(1), Qubit(2))
 print(circuit.schedule())
 print(circuit.channel_times)
 ```
+
+The complete supported set is `X2P`, `X2M`, `Y2P`, `Y2M`, `XY2P`,
+`XY2M`, `RZ`, `CX`, `I`, `B`, and `M`. `delay()`/`barrier()` remain as
+compatibility names for `i()`/`b()`.
 
 `PXY/PZ/G/I` advance their channel clocks, `PZ0` does not advance time, and
 `B` aligns the listed channels. Machine calibration, mapping, and hardware

@@ -133,10 +133,15 @@ restored = PulseCircuit.from_qcis(qcis)
 线路也可以保留普通 QCIS 指令：
 
 ```python
-circuit.rz(1, 1.57).x2p(1).barrier(Qubit(1), Qubit(2))
+circuit.x2p(1).x2m(1).y2p(1).y2m(1)
+circuit.xy2p(1, 0.25).xy2m(1, -0.25).rz(1, 1.57)
+circuit.cx(1, 2).i(1, 20).b(Qubit(1), Qubit(2))
 print(circuit.schedule())       # 每条操作的 start_ns / end_ns
 print(circuit.channel_times)    # 每个通道的最终时刻
 ```
+
+当前完整支持 `X2P`、`X2M`、`Y2P`、`Y2M`、`XY2P`、`XY2M`、`RZ`、
+`CX`、`I`、`B` 和 `M`。`delay()`/`barrier()` 是 `i()`/`b()` 的兼容名称。
 
 `PXY/PZ/G/I` 推进对应通道时间，`PZ0` 不推进时间，`B` 对齐所列通道。
 机器标定值、映射关系和数值波形的硬件约束仍由云平台校验，本地只进行
