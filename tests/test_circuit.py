@@ -100,6 +100,25 @@ def test_append_standard_resolves_integer_targets():
     assert circuit.qubits == (Qubit(0), Qubit(1))
 
 
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: PulseCircuit(True),
+        lambda: PulseCircuit(qubits=[True]),
+        lambda: PulseCircuit().x2p(True),
+        lambda: PulseCircuit().append_standard("X2P", True),
+    ],
+)
+def test_boolean_is_not_accepted_as_a_target_index(factory):
+    with pytest.raises(PulseValidationError, match="Target"):
+        factory()
+
+
+def test_standard_operation_rejects_non_target_objects():
+    with pytest.raises(PulseValidationError, match="Operation targets"):
+        StandardOperation("X2P", ("Q0",))  # type: ignore[arg-type]
+
+
 def test_pz0_does_not_advance_channel_time_but_delay_does():
     circuit = PulseCircuit()
     circuit.pz0(0, CosineWaveform(length=30, amplitude=0.2))
@@ -139,6 +158,7 @@ def test_target_rules_are_enforced():
     [
         "G Q0 10 20",
         "PZ Q0 99 10 0.2 0",
+        "PZ Q0 0 10 0.2 0.5",
         "PXY Q0 0 10 0.2",
         "I Q0 10 extra",
         "X2P Q0 0.5",

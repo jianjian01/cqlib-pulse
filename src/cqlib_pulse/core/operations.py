@@ -19,9 +19,8 @@ from dataclasses import dataclass
 
 from ..errors import PulseValidationError
 from .instructions import PulseInstruction
-from .targets import CouplerQubit, PulseTarget
+from .targets import CouplerQubit, PulseTarget, Qubit
 from .waveforms import MAX_PULSE_LENGTH_NS, Number, validate_real
-
 
 _SINGLE_QUBIT_GATES = {"X2P", "X2M", "Y2P", "Y2M"}
 _PARAMETRIC_SINGLE_QUBIT_GATES = {"XY2P", "XY2M", "RZ"}
@@ -58,6 +57,8 @@ class StandardOperation:
             raise PulseValidationError(f"Invalid QCIS opcode: {self.opcode!r}")
         if not self.targets:
             raise PulseValidationError("A standard operation requires at least one target")
+        if any(not isinstance(target, (Qubit, CouplerQubit)) for target in self.targets):
+            raise PulseValidationError("Operation targets must be Qubit or CouplerQubit instances")
         for value in self.parameters:
             validate_real("operation parameter", value)
         if self.opcode in _SINGLE_QUBIT_GATES:
@@ -88,8 +89,7 @@ class StandardOperation:
     def _validate_arity(self, targets: int, parameters: int) -> None:
         if len(self.targets) != targets or len(self.parameters) != parameters:
             raise PulseValidationError(
-                f"{self.opcode} requires exactly {targets} target(s) and "
-                f"{parameters} parameter(s)"
+                f"{self.opcode} requires exactly {targets} target(s) and {parameters} parameter(s)"
             )
 
     def _validate_data_qubits(self) -> None:

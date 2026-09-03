@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+import pytest
+
 from cqlib_pulse import CosineWaveform, PulseCircuit, TianyanExecutor
 
 
@@ -48,3 +50,18 @@ def test_submit_and_wait_for_tianyan_result():
     assert execution.task is backend.task
     assert execution.results == [{"counts": {"0": 10}}]
     assert backend.task.wait_options == (12, 0.5)
+
+
+@pytest.mark.parametrize(
+    ("timeout_secs", "poll_interval_secs"),
+    [(0, 1), (1, 0), (-1, 1), (1, -1)],
+)
+def test_run_rejects_non_positive_wait_options(timeout_secs, poll_interval_secs):
+    executor = TianyanExecutor(FakeBackend())
+
+    with pytest.raises(ValueError, match="must be positive"):
+        executor.run(
+            "X2P Q0",
+            timeout_secs=timeout_secs,
+            poll_interval_secs=poll_interval_secs,
+        )

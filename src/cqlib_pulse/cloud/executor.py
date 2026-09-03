@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from ..core.circuit import PulseCircuit
 from ..errors import TianyanIntegrationError
@@ -25,14 +25,14 @@ from ..errors import TianyanIntegrationError
 class TianyanTask(Protocol):
     """The small part of a cqlib-tianyan task used by this package."""
 
-    def wait(self, *, timeout_secs: float, poll_interval_secs: float) -> Any: ...
+    def wait(self, *, timeout_secs: float, poll_interval_secs: float) -> object: ...
 
 
 @runtime_checkable
 class TianyanBackend(Protocol):
     """Backend interface used by the executor and test doubles."""
 
-    def run(self, circuits: list[str], *, shots: int, **kwargs: Any) -> TianyanTask: ...
+    def run(self, circuits: list[str], *, shots: int, **kwargs: object) -> TianyanTask: ...
 
 
 @dataclass(slots=True)
@@ -40,7 +40,7 @@ class PulseExecution:
     """A submitted cloud task and, after waiting, its returned results."""
 
     task: TianyanTask
-    results: Any = None
+    results: object | None = None
 
 
 class TianyanExecutor:
@@ -50,7 +50,7 @@ class TianyanExecutor:
         self.backend = backend
 
     @classmethod
-    def login(cls, api_key: str, machine_name: str) -> "TianyanExecutor":
+    def login(cls, api_key: str, machine_name: str) -> TianyanExecutor:
         """Log in with cqlib-tianyan and select a backend lazily.
 
         Keeping this import lazy lets the core pulse data model remain usable
@@ -79,7 +79,7 @@ class TianyanExecutor:
         circuit: PulseCircuit | str,
         *,
         shots: int = 1_000,
-        **run_options: Any,
+        **run_options: object,
     ) -> PulseExecution:
         """Submit one circuit and return immediately with its task handle."""
 
@@ -98,10 +98,12 @@ class TianyanExecutor:
         shots: int = 1_000,
         timeout_secs: float = 3_600,
         poll_interval_secs: float = 10,
-        **run_options: Any,
+        **run_options: object,
     ) -> PulseExecution:
         """Submit a circuit, wait for completion and retain the task handle."""
 
+        if timeout_secs <= 0 or poll_interval_secs <= 0:
+            raise ValueError("timeout_secs and poll_interval_secs must be positive")
         execution = self.submit(circuit, shots=shots, **run_options)
         execution.results = execution.task.wait(
             timeout_secs=timeout_secs,

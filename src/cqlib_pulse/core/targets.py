@@ -21,6 +21,8 @@ from cqlib import Qubit
 
 from ..errors import PulseValidationError
 
+__all__ = ["CouplerQubit", "PulseTarget", "Qubit", "parse_target"]
+
 
 @dataclass(frozen=True, slots=True, order=True)
 class CouplerQubit:
