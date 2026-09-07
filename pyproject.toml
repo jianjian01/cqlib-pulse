@@ -38,13 +38,9 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Typing :: Typed",
 ]
-dependencies = [
-  "cqlib>=0.1.0,<2",
-]
+dependencies = ["cqlib-tianyan>=0.1.0,<1"]
 
 [project.optional-dependencies]
-# Cloud support is optional so local circuit/QCIS use remains lightweight.
-tianyan = ["cqlib-tianyan>=0.1.0,<1"]
 test = ["pytest>=8"]
 build = ["build>=1.2", "twine>=5"]
 dev = ["mypy>=1.19,<2", "pre-commit>=4,<5", "pytest>=8"]

@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 import pytest
-from cqlib import Qubit as CqlibQubit
 
 from cqlib_pulse import (
     CosineWaveform,
@@ -133,12 +132,9 @@ def test_pz0_does_not_advance_channel_time_but_delay_does():
     assert circuit.channel_times == {Qubit(0): 30}
 
 
-def test_public_qubit_is_the_official_cqlib_type():
-    assert Qubit is CqlibQubit
-    circuit = PulseCircuit().pz(
-        CqlibQubit(3),
-        CosineWaveform(length=10, amplitude=0.2),
-    )
+def test_public_qubit_is_owned_by_cqlib_pulse():
+    assert Qubit.__module__ == "cqlib_pulse.core.targets"
+    circuit = PulseCircuit().pz(Qubit(3), CosineWaveform(length=10, amplitude=0.2))
     assert circuit.to_qcis() == "PZ Q3 0 10 0.2 0"
 
 

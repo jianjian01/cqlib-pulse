@@ -58,8 +58,7 @@ def _resolve_target(target: int | PulseTarget) -> PulseTarget:
 class PulseCircuit(Sequence[Operation]):
     """An ordered circuit supporting both pulse and ordinary QCIS operations.
 
-    The extension owns its Python operation sequence and reuses ``cqlib.Qubit``.
-    The non-subclassable PyO3 ``cqlib.Circuit`` is used through composition.
+    The extension owns its targets and Python operation sequence independently.
     """
 
     def __init__(
